@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { Env } from "../env";
 import { getSettings, normalizeCfCookie } from "../settings";
 import { applyCooldown, recordTokenFailure, selectBestToken } from "../repo/tokens";
-import { getDynamicHeaders } from "../grok/headers";
+import { getDynamicHeaders, proxiedFetch } from "../grok/headers";
 import { deleteCacheRow, touchCacheRow, upsertCacheRow, type CacheType } from "../repo/cache";
 import { nowMs } from "../utils/time";
 import { nextLocalMidnightExpirationSeconds } from "../kv/cleanup";
@@ -217,7 +217,7 @@ mediaRoutes.get("/images/:imgPath{.+}", async (c) => {
 
   // Range requests: KV can't stream partial content efficiently; proxy from upstream.
   // (If the object is cached and within KV limits, we do support Range by slicing bytes above.)
-  const upstream = await fetch(url.toString(), { headers: rangeHeader ? { ...baseHeaders, Range: rangeHeader } : baseHeaders });
+  const upstream = await proxiedFetch(url.toString(), { headers: rangeHeader ? { ...baseHeaders, Range: rangeHeader } : baseHeaders }, settingsBundle.grok);
   if (!upstream.ok || !upstream.body) {
     const txt = await upstream.text().catch(() => "");
     await recordTokenFailure(c.env.DB, chosen.token, upstream.status, txt.slice(0, 200));
