@@ -6,7 +6,7 @@ import { getSettings, normalizeCfCookie } from "../settings";
 import { isValidModel, MODEL_CONFIG } from "../grok/models";
 import { extractContent, buildConversationPayload, sendConversationRequest } from "../grok/conversation";
 import { uploadImage } from "../grok/upload";
-import { getDynamicHeaders } from "../grok/headers";
+import { getDynamicHeaders, proxiedFetch } from "../grok/headers";
 import { createMediaPost, createPost } from "../grok/create";
 import { createOpenAiStreamFromGrokNdjson, parseOpenAiFromGrokNdjson } from "../grok/processor";
 import {
@@ -306,7 +306,7 @@ async function fetchImageAsBase64(args: {
   headers["Sec-Fetch-Site"] = "same-site";
   headers.Referer = "https://grok.com/";
 
-  const resp = await fetch(url.toString(), { method: "GET", headers, redirect: "follow" });
+  const resp = await proxiedFetch(url.toString(), { method: "GET", headers, redirect: "follow" }, args.settings);
   if (!resp.ok) {
     const txt = await resp.text().catch(() => "");
     throw new Error(`Image download failed: ${resp.status} ${txt.slice(0, 200)}`);

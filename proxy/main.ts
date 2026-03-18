@@ -37,7 +37,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   } catch {
     return new Response("Invalid x-proxy-target URL", { status: 400 });
   }
-  if (!targetUrl.hostname.endsWith("grok.com") && targetUrl.hostname !== "grok.com") {
+  if (!targetUrl.hostname.endsWith("grok.com") && targetUrl.hostname !== "grok.com" && !targetUrl.hostname.endsWith(".grok.com")) {
     return new Response("Target host not allowed", { status: 403 });
   }
 
