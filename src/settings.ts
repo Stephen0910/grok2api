@@ -15,6 +15,7 @@ export interface GlobalSettings {
 export interface GrokSettings {
   api_key?: string;
   proxy_url?: string;
+  proxy_secret?: string;
   proxy_pool_url?: string;
   proxy_pool_interval?: number;
   cache_proxy_url?: string;
@@ -92,6 +93,7 @@ const DEFAULTS: SettingsBundle = {
   grok: {
     api_key: "",
     proxy_url: "",
+    proxy_secret: "",
     proxy_pool_url: "",
     proxy_pool_interval: 300,
     cache_proxy_url: "",

@@ -1,5 +1,5 @@
 import type { GrokSettings } from "../settings";
-import { getDynamicHeaders } from "./headers";
+import { getDynamicHeaders, proxiedFetch } from "./headers";
 import { arrayBufferToBase64 } from "../utils/base64";
 
 const UPLOAD_API = "https://grok.com/rest/app-chat/upload-file";
@@ -67,7 +67,7 @@ export async function uploadImage(
   const headers = getDynamicHeaders(settings, "/rest/app-chat/upload-file");
   headers.Cookie = cookie;
 
-  const resp = await fetch(UPLOAD_API, { method: "POST", headers, body });
+  const resp = await proxiedFetch(UPLOAD_API, { method: "POST", headers, body }, settings);
   if (!resp.ok) {
     const text = await resp.text().catch(() => "");
     throw new Error(`上传失败: ${resp.status} ${text.slice(0, 200)}`);

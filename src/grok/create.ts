@@ -1,5 +1,5 @@
 import type { GrokSettings } from "../settings";
-import { getDynamicHeaders } from "./headers";
+import { getDynamicHeaders, proxiedFetch } from "./headers";
 
 const ENDPOINT = "https://grok.com/rest/media/post/create";
 
@@ -25,7 +25,7 @@ export async function createMediaPost(
 
   const body = JSON.stringify(bodyObj);
 
-  const resp = await fetch(ENDPOINT, { method: "POST", headers, body });
+  const resp = await proxiedFetch(ENDPOINT, { method: "POST", headers, body }, settings);
   if (!resp.ok) {
     const text = await resp.text().catch(() => "");
     throw new Error(`创建会话失败: ${resp.status} ${text.slice(0, 200)}`);

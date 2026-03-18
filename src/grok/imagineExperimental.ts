@@ -1,5 +1,5 @@
 import { sendConversationRequest } from "./conversation";
-import { getDynamicHeaders } from "./headers";
+import { getDynamicHeaders, proxiedFetch } from "./headers";
 import type { GrokSettings } from "../settings";
 
 export const IMAGE_METHOD_LEGACY = "legacy" as const;

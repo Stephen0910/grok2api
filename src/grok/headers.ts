@@ -39,6 +39,22 @@ function generateStatsigId(): string {
   return btoa(msg);
 }
 
+export function proxiedFetch(
+  targetUrl: string,
+  init: RequestInit,
+  settings: GrokSettings,
+): Promise<Response> {
+  const proxyUrl = (settings.proxy_url ?? "").trim();
+  const proxySecret = (settings.proxy_secret ?? "").trim();
+  if (!proxyUrl) {
+    return fetch(targetUrl, init);
+  }
+  const headers = new Headers((init.headers ?? {}) as HeadersInit);
+  headers.set("x-proxy-target", targetUrl);
+  if (proxySecret) headers.set("x-proxy-secret", proxySecret);
+  return fetch(proxyUrl, { ...init, headers });
+}
+
 export function getDynamicHeaders(settings: GrokSettings, pathname: string): Record<string, string> {
   const dynamic = settings.dynamic_statsig !== false;
   const statsigId = dynamic ? generateStatsigId() : (settings.x_statsig_id ?? "").trim();

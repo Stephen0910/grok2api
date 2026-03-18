@@ -1,5 +1,5 @@
 import type { GrokSettings } from "../settings";
-import { getDynamicHeaders } from "./headers";
+import { getDynamicHeaders, proxiedFetch } from "./headers";
 import { getModelInfo, toGrokModel } from "./models";
 
 export interface OpenAIChatMessage {
@@ -170,5 +170,5 @@ export async function sendConversationRequest(args: {
   if (referer) headers.Referer = referer;
   const body = JSON.stringify(payload);
 
-  return fetch(CONVERSATION_API, { method: "POST", headers, body });
+  return proxiedFetch(CONVERSATION_API, { method: "POST", headers, body }, settings);
 }

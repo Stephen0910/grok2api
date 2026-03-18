@@ -266,6 +266,7 @@ adminRoutes.get("/api/v1/admin/config", requireAdminAuth, async (c) => {
         video_poster_preview: Boolean(settings.grok.video_poster_preview),
         timeout: Number(settings.grok.stream_total_timeout ?? 600),
         base_proxy_url: String(settings.grok.proxy_url ?? ""),
+        proxy_secret: String(settings.grok.proxy_secret ?? ""),
         asset_proxy_url: String(settings.grok.cache_proxy_url ?? ""),
         cf_clearance: String(settings.grok.cf_clearance ?? ""),
         max_retry: 3,
@@ -325,6 +326,7 @@ adminRoutes.post("/api/v1/admin/config", requireAdminAuth, async (c) => {
 
     if (grokCfg && typeof grokCfg === "object") {
       if (typeof grokCfg.base_proxy_url === "string") grok_config.proxy_url = grokCfg.base_proxy_url.trim();
+      if (typeof grokCfg.proxy_secret === "string") grok_config.proxy_secret = grokCfg.proxy_secret.trim();
       if (typeof grokCfg.asset_proxy_url === "string") grok_config.cache_proxy_url = grokCfg.asset_proxy_url.trim();
       if (typeof grokCfg.cf_clearance === "string") grok_config.cf_clearance = grokCfg.cf_clearance.trim();
       if (typeof grokCfg.filter_tags === "string") {

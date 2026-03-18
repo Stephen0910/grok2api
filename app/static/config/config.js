@@ -40,6 +40,7 @@ const LOCALE_MAP = {
     "video_poster_preview": { title: "视频海报预览", desc: "启用后会将返回内容中的 <video> 标签替换为带播放按钮的 Poster 预览图；点击预览图会在新标签页打开视频（默认关闭）。" },
     "timeout": { title: "超时时间", desc: "请求 Grok 服务的超时时间（秒）。" },
     "base_proxy_url": { title: "基础代理 URL", desc: "代理请求到 Grok 官网的基础服务地址。" },
+    "proxy_secret": { title: "代理密钥", desc: "请求转发代理时携带的共享密钥（与代理服务器的 PROXY_SECRET 环境变量一致）。" },
     "asset_proxy_url": { title: "资源代理 URL", desc: "代理请求到 Grok 官网的静态资源（图片/视频）地址。" },
     "cf_clearance": { title: "CF Clearance", desc: "Cloudflare 验证 Cookie，用于验证 Cloudflare 的验证。" },
     "max_retry": { title: "最大重试", desc: "请求 Grok 服务失败时的最大重试次数。" },
