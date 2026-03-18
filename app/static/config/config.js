@@ -41,6 +41,7 @@ const LOCALE_MAP = {
     "timeout": { title: "超时时间", desc: "请求 Grok 服务的超时时间（秒）。" },
     "base_proxy_url": { title: "基础代理 URL", desc: "代理请求到 Grok 官网的基础服务地址。" },
     "proxy_secret": { title: "代理密钥", desc: "请求转发代理时携带的共享密钥（与代理服务器的 PROXY_SECRET 环境变量一致）。" },
+    "proxy_mode": { title: "代理模式", desc: "direct=直连；custom=自定义代理（需填写代理URL）；warp=Cloudflare WARP（需在 CF Zero Trust 控制台配置，代码无需修改）。" },
     "asset_proxy_url": { title: "资源代理 URL", desc: "代理请求到 Grok 官网的静态资源（图片/视频）地址。" },
     "cf_clearance": { title: "CF Clearance", desc: "Cloudflare 验证 Cookie，用于验证 Cloudflare 的验证。" },
     "max_retry": { title: "最大重试", desc: "请求 Grok 服务失败时的最大重试次数。" },

@@ -8,6 +8,7 @@ video_poster_preview = false
 timeout = 120
 base_proxy_url = ""
 proxy_secret = ""
+proxy_mode = "custom"
 asset_proxy_url = ""
 cf_clearance = ""
 max_retry = 3

@@ -44,6 +44,11 @@ export function proxiedFetch(
   init: RequestInit,
   settings: GrokSettings,
 ): Promise<Response> {
+  const mode = (settings.proxy_mode ?? "").trim() || (settings.proxy_url ? "custom" : "direct");
+  if (mode === "direct" || mode === "warp") {
+    return fetch(targetUrl, init);
+  }
+  // mode === "custom"
   const proxyUrl = (settings.proxy_url ?? "").trim();
   const proxySecret = (settings.proxy_secret ?? "").trim();
   if (!proxyUrl) {
