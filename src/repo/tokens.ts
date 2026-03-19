@@ -202,6 +202,8 @@ export async function applyCooldown(db: Env["DB"], token: string, status: number
     const remaining = row?.remaining_queries ?? -1;
     const seconds = remaining > 0 || remaining === -1 ? 3600 : 36000;
     until = now + seconds * 1000;
+    // 强制 remaining_queries 归零，避免 cooldown 后仍被优先选中（视频/图片限速场景）
+    await dbRun(db, "UPDATE tokens SET remaining_queries = 0 WHERE token = ? AND remaining_queries > 0", [token]);
   } else {
     // Workers 不适合做“按请求次数”冷却，这里用短时间冷却近似替代。
     until = now + 30 * 1000;

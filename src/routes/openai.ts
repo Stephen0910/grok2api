@@ -549,8 +549,15 @@ function parseAllowedImageMime(file: File): string | null {
   return null;
 }
 
+function extractJwt(token: string): string {
+  // token 可能是 email:password:jwt 格式，提取纯 JWT 部分
+  const parts = token.split(":");
+  return parts.length >= 3 ? parts.slice(2).join(":") : token;
+}
+
 function buildCookie(token: string, cf: string): string {
-  return cf ? `sso-rw=${token};sso=${token};${cf}` : `sso-rw=${token};sso=${token}`;
+  const jwt = extractJwt(token);
+  return cf ? `sso-rw=${jwt};sso=${jwt};${cf}` : `sso-rw=${jwt};sso=${jwt}`;
 }
 
 async function runImageCall(args: {
@@ -1243,7 +1250,7 @@ openAiRoutes.post("/chat/completions", async (c) => {
       const chosen = await selectBestToken(c.env.DB, requestedModel);
       if (!chosen) return c.json(openAiError("No available token", "NO_AVAILABLE_TOKEN"), 503);
 
-      const jwt = chosen.token;
+      const jwt = extractJwt(chosen.token);
       const cf = normalizeCfCookie(settingsBundle.grok.cf_clearance ?? "");
       const cookie = cf ? `sso-rw=${jwt};sso=${jwt};${cf}` : `sso-rw=${jwt};sso=${jwt}`;
 
