@@ -369,3 +369,99 @@ export async function sendExperimentalImageEditRequest(args: {
     `Experimental image edit upstream failed: ${lastStatus} ${lastErrorBody.slice(0, 200)}`,
   );
 }
+
+// ============================================================
+// REST-based image generation (replaces deprecated WS endpoint)
+// Uses /rest/app-chat/conversations/new with enableImageGeneration
+// ============================================================
+
+const IMAGINE_REST_REFERER = "https://grok.com/imagine";
+const IMAGINE_REST_MODEL = "grok-imagine-1.0";
+
+function buildImagineRestPayload(prompt: string, aspectRatio: string, n: number): Record<string, unknown> {
+  return {
+    temporary: true,
+    modelName: IMAGINE_REST_MODEL,
+    message: prompt,
+    fileAttachments: [],
+    imageAttachments: [],
+    disableSearch: true,
+    enableImageGeneration: true,
+    returnImageBytes: false,
+    returnRawGrokInXaiRequest: false,
+    enableImageStreaming: true,
+    imageGenerationCount: Math.min(4, Math.max(1, n)),
+    forceConcise: false,
+    toolOverrides: { imageGen: true },
+    enableSideBySide: true,
+    sendFinalMetadata: true,
+    isReasoning: false,
+    disableTextFollowUps: true,
+    responseMetadata: {
+      requestModelDetails: { modelId: IMAGINE_REST_MODEL },
+      imageGenerationConfig: { aspectRatio },
+    },
+    disableMemory: true,
+    forceSideBySide: false,
+    isAsyncChat: false,
+  };
+}
+
+function extractGeneratedImageUrls(line: string): string[] {
+  try {
+    const data = JSON.parse(line) as Record<string, unknown>;
+    const err = (data?.error as Record<string, unknown>)?.message;
+    if (err) throw new Error(String(err));
+    const resp = (data?.result as Record<string, unknown>)?.response as Record<string, unknown>;
+    const modelResp = resp?.modelResponse as Record<string, unknown> | undefined;
+    const raw = modelResp?.generatedImageUrls;
+    if (Array.isArray(raw)) return raw.filter((u): u is string => typeof u === "string" && u.length > 0);
+  } catch (e) {
+    if (e instanceof SyntaxError) return [];
+    throw e;
+  }
+  return [];
+}
+
+export async function generateImagineRest(args: {
+  prompt: string;
+  n: number;
+  cookie: string;
+  settings: GrokSettings;
+  aspectRatio?: string;
+  progressCb?: (progress: ImagineWsProgress) => void | Promise<void>;
+  completedCb?: (completed: ImagineWsCompleted) => void | Promise<void>;
+}): Promise<string[]> {
+  const aspectRatio = resolveAspectRatio(args.aspectRatio ?? "1:1");
+  const targetCount = Math.max(1, Math.floor(Number(args.n || 1)));
+  const payload = buildImagineRestPayload(args.prompt, aspectRatio, Math.min(4, targetCount));
+
+  const upstream = await sendConversationRequest({
+    payload,
+    cookie: args.cookie,
+    settings: args.settings,
+    referer: IMAGINE_REST_REFERER,
+  });
+
+  if (!upstream.ok) {
+    const text = await upstream.text().catch(() => "");
+    throw new Error(`Imagine REST upstream failed: ${upstream.status} ${text.slice(0, 300)}`);
+  }
+
+  const text = await upstream.text();
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  const allUrls: string[] = [];
+
+  for (const line of lines) {
+    const urls = extractGeneratedImageUrls(line);
+    for (const url of urls) {
+      if (!allUrls.includes(url)) {
+        const idx = allUrls.length;
+        allUrls.push(url);
+        if (args.completedCb) await args.completedCb({ index: idx, url });
+      }
+    }
+  }
+
+  return allUrls.slice(0, targetCount);
+}

@@ -12,6 +12,7 @@ import { createOpenAiStreamFromGrokNdjson, parseOpenAiFromGrokNdjson } from "../
 import {
   IMAGE_METHOD_IMAGINE_WS_EXPERIMENTAL,
   generateImagineWs,
+  generateImagineRest,
   resolveAspectRatio,
   resolveImageGenerationMethod,
   sendExperimentalImageEditRequest,
@@ -646,7 +647,7 @@ async function collectExperimentalGenerationImages(args: {
     plans,
     Math.min(plans.length, Math.max(1, args.concurrency || 1)),
     async (plan) =>
-      generateImagineWs({
+      generateImagineRest({
         prompt: args.prompt,
         n: plan.chunkN,
         cookie: args.cookie,
@@ -906,7 +907,7 @@ function createExperimentalImageEventStream(args: {
           plans,
           Math.min(plans.length, concurrency),
           async (plan) => {
-            const rawUrls = await generateImagineWs({
+            const rawUrls = await generateImagineRest({
               prompt: args.prompt,
               n: plan.chunkN,
               cookie: args.cookie,
