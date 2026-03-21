@@ -252,6 +252,97 @@ class ImagineExperimentalService:
             except Exception:
                 pass
 
+
+    async def generate_rest(
+        self,
+        token: str,
+        prompt: str,
+        n: int = 2,
+        aspect_ratio: str = "2:3",
+        completed_cb=None,
+        timeout=None,
+    ):
+        import orjson as _orjson
+        target_count = max(1, int(n or 1))
+        effective_timeout = max(10, int(timeout or self.timeout))
+        payload = {
+            "temporary": True,
+            "modelName": "grok-imagine-1.0",
+            "message": prompt,
+            "fileAttachments": [],
+            "imageAttachments": [],
+            "disableSearch": True,
+            "enableImageGeneration": True,
+            "returnImageBytes": False,
+            "returnRawGrokInXaiRequest": False,
+            "enableImageStreaming": True,
+            "imageGenerationCount": min(4, max(1, target_count)),
+            "forceConcise": False,
+            "toolOverrides": {"imageGen": True},
+            "enableSideBySide": True,
+            "sendFinalMetadata": True,
+            "isReasoning": False,
+            "disableTextFollowUps": True,
+            "responseMetadata": {
+                "requestModelDetails": {"modelId": "grok-imagine-1.0"},
+                "imageGenerationConfig": {"aspectRatio": aspect_ratio},
+            },
+            "disableMemory": True,
+            "forceSideBySide": False,
+            "isAsyncChat": False,
+        }
+        headers = self._headers(token, referer="https://grok.com/imagine")
+        proxies = self._proxies()
+        session = AsyncSession(impersonate=BROWSER)
+        all_urls = []
+        try:
+            response = await session.post(
+                CHAT_API,
+                headers=headers,
+                data=_orjson.dumps(payload),
+                timeout=effective_timeout,
+                proxies=proxies,
+            )
+            if response.status_code != 200:
+                body = ""
+                try:
+                    body = response.text
+                except Exception:
+                    pass
+                raise UpstreamException(
+                    message=f"Imagine REST upstream failed: {response.status_code}",
+                    details={"status": response.status_code, "body": body[:500]},
+                )
+            text = response.text
+            for line in text.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    data = _orjson.loads(line)
+                except Exception:
+                    continue
+                err = (data.get("error") or {}).get("message")
+                if err:
+                    raise UpstreamException(str(err))
+                resp = (data.get("result") or {}).get("response") or {}
+                model_resp = resp.get("modelResponse") or {}
+                urls = model_resp.get("generatedImageUrls") or []
+                for url in urls:
+                    if isinstance(url, str) and url and url not in all_urls:
+                        idx = len(all_urls)
+                        all_urls.append(url)
+                        if completed_cb:
+                            await completed_cb(idx, url)
+        finally:
+            try:
+                await session.close()
+            except Exception:
+                pass
+        if not all_urls:
+            raise UpstreamException("Imagine REST returned no images")
+        return all_urls[:target_count]
+
     async def convert_urls(self, token: str, urls: Iterable[str], response_format: str = "b64_json") -> List[str]:
         mode = str(response_format or "b64_json").strip().lower()
         out: List[str] = []

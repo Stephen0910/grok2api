@@ -421,7 +421,7 @@ async def _experimental_stream_generation(
     async def _producer():
         nonlocal producer_error
         try:
-            await service.generate_ws(
+            await service.generate_rest(
                 token=token,
                 prompt=prompt,
                 n=n,

@@ -76,7 +76,7 @@ async def call_experimental_generation_once(
     aspect_ratio: str = "2:3",
 ) -> List[str]:
     service = ImagineExperimentalService()
-    raw_urls = await service.generate_ws(
+    raw_urls = await service.generate_rest(
         token=token,
         prompt=prompt,
         n=n,
