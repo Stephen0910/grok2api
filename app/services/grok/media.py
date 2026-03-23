@@ -172,7 +172,8 @@ class VideoService:
         aspect_ratio: str = "3:2",
         video_length: int = 6,
         resolution: str = "SD",
-        preset: str = "normal"
+        preset: str = "normal",
+        image_url: str = None,
     ) -> dict:
         """构建视频生成载荷"""
         mode_flag = "--mode=custom"
@@ -185,6 +186,17 @@ class VideoService:
             
         full_prompt = f"{prompt} {mode_flag}"
         
+        video_gen_config = {
+            "parentPostId": post_id,
+            "aspectRatio": aspect_ratio,
+            "videoLength": video_length,
+            "videoResolution": resolution
+        }
+        
+        # 图生视频：传入 imageUrl 作为起始帧
+        if image_url:
+            video_gen_config["imageUrl"] = image_url
+        
         return {
             "temporary": True,
             "modelName": "grok-3",
@@ -195,12 +207,7 @@ class VideoService:
                 "experiments": [],
                 "modelConfigOverride": {
                     "modelMap": {
-                        "videoGenModelConfig": {
-                            "parentPostId": post_id,
-                            "aspectRatio": aspect_ratio,
-                            "videoLength": video_length,
-                            "videoResolution": resolution
-                        }
+                        "videoGenModelConfig": video_gen_config
                     }
                 }
             }
@@ -322,7 +329,7 @@ class VideoService:
                 
                 # Step 2: 建立连接
                 headers = self._build_headers(token)
-                payload = self._build_payload(prompt, post_id, aspect_ratio, video_length, resolution, preset)
+                payload = self._build_payload(prompt, post_id, aspect_ratio, video_length, resolution, preset, image_url=image_url)
                 
                 session = AsyncSession(impersonate=BROWSER)
                 response = await session.post(
